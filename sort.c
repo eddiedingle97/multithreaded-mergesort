@@ -42,11 +42,7 @@ int main(int argc, char **argv)
                 break;
             
             case 'h':
-                puts("
-                        -l x,y,z \t\t: enter list with elements x,y,z\n
-                        -f filename \t\t: read list from csv file\n
-                        -t x \t\t: make process using x amount of threads\n"
-                    );
+                puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-t x \t\t\t: make process using x amount of threads\n");
                 helpopt = 1;
                 break;
         }

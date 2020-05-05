@@ -141,11 +141,11 @@ static int getthreads(struct threadparams *p)
     sem_wait(p->sem);
         char total = *p->threads + *p->threadsused;
 
-        if(*p->threads > 0 && total >= (1 << p->level))
+        if(*p->threads > 0 && total >= (1 << p->level - 1))
         {
             out++;
-            *p->threads--;
-            *p->threadsused++;
+            *p->threads = *p->threads - 1;
+            *p->threadsused = *p->threadsused + 1;
         }
 
     sem_post(p->sem);
