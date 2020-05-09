@@ -4,9 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <errno.h>
 #include "mergesort.h"
 
 static int *get_list(char *arg, int *size);
+static int *get_list_from_file(char *filename, int *size);
+int get_token(int fd, int *notdone);
 
 int main(int argc, char **argv)
 {
@@ -18,18 +24,20 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error allocating memory\n");
         return 1;
     }
+    *size = 0;
     char helpopt = 0, fileopt = 0, listopt = 0, threadopt = 0, threads = 0;
     char *filename;
-    while((opt = getopt(argc, argv, "hf:t:l:")) != -1)
+    while((opt = getopt(argc, argv, "hf:j:l:")) != -1)
         switch(opt)
         {
             case 'f':
                 printf("file option %s\n", optarg);
                 fileopt = 1;
                 filename = optarg;
+                list = get_list_from_file(filename, size);
                 break;
 
-            case 't':
+            case 'j':
                 printf("thread option %s\n", optarg);
                 threadopt = 1;
                 threads = atoi(optarg);
@@ -42,7 +50,7 @@ int main(int argc, char **argv)
                 break;
             
             case 'h':
-                puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-t x \t\t\t: make process using x amount of threads\n");
+                puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-j x \t\t\t: make process using x amount of threads\n");
                 helpopt = 1;
                 break;
         }
@@ -58,15 +66,17 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    if(listopt)
+    if(*size > 1)
     {
         mergesort(list, *size, threads);
     }
 
+    printf("%d", list[0]);
+
     int i;
-    for(i = 0; i < *size; i++)
+    for(i = 1; i < *size; i++)
     {
-        printf("%d,", list[i]);
+        printf(",%d", list[i]);
     }
     printf("\n");
 
@@ -114,7 +124,7 @@ static int *get_list(char *arg, int *size) //return value must be freed
 
         if(ptr - lastptr > 12)
         {
-            fprintf(stderr, "Integers in list are too large, no more than 12 digits per element can be used.\n");
+            fprintf(stderr, "Integers in list are too large, no more than 12 characters per integer can be used.\n");
             exit(1);
         }
 
@@ -145,4 +155,70 @@ static int *get_list(char *arg, int *size) //return value must be freed
     *size = outptr;
 
     return out;
+}
+
+static int *get_list_from_file(char *filename, int *size) //return value must be freed
+{
+    int fd = open(filename, O_RDONLY);
+
+    if(fd < 1)
+    {
+        fprintf(stderr, "Error opening file\n");
+        exit(1);
+    }
+
+    int *out = malloc(sizeof(int));
+    int notdone = 0;
+
+    if(!out)
+    {
+        fprintf(stderr, "Error allocating memory\n");
+        exit(1);
+    }
+
+    out[*size] = get_token(fd, &notdone);
+
+    while(notdone)
+    {
+        *size += 1;
+
+        out = realloc(out, (*size + 1) * sizeof(int));
+        
+        if(!out)
+        {
+            fprintf(stderr, "Error allocating memory");
+            exit(1);
+        }
+
+        out[*size] = get_token(fd, &notdone);
+    }
+    
+    close(fd);
+
+    return out;
+}
+
+int get_token(int fd, int *notdone)
+{
+    char buf[12];
+    int i = 0;
+    memset(buf, '\0', 12);
+
+    while((*notdone = read(fd, buf + i, 1)) != 0 && buf[i++] != ',')
+    {
+        if(*notdone < 0)
+        {
+            fprintf(stderr, "An error occured while reading from the file\n");
+            exit(1);
+        }
+
+        if(i == 12)
+        {
+            fprintf(stderr, "An integer in the file was too large\n");
+            exit(1);
+        }
+    }
+
+    buf[i - 1] = '\0';
+    return atoi(buf);
 }

@@ -1,5 +1,5 @@
 CC := gcc
-FLAGS := -Wall
+FLAGS := -Wall -pedantic
 OTHERS := -lpthread -lrt
 
 sort : getdata.c mergesort.c

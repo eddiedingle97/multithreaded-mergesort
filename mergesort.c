@@ -36,8 +36,8 @@ void mergesort(int *list, int size, int threads)
         int newsize = size >> 1;
 
         pthread_t left;
-        sem_t *sem;
-        sem_init(sem, 0, 1);
+        sem_t sem;
+        sem_init(&sem, 0, 1);
 
         struct threadparams pleft;
         pleft.list = list;
@@ -45,7 +45,7 @@ void mergesort(int *list, int size, int threads)
         pleft.threads = &threads;
         pleft.threadsused = threadsused;
         pleft.level = 0;
-        pleft.sem = sem;
+        pleft.sem = &sem;
 
         struct threadparams pright;
         pright.list = list + newsize;
@@ -53,7 +53,7 @@ void mergesort(int *list, int size, int threads)
         pright.threads = &threads;
         pright.threadsused = threadsused;
         pright.level = 0;
-        pright.sem = sem;
+        pright.sem = &sem;
 
         threads--;
 
@@ -64,7 +64,7 @@ void mergesort(int *list, int size, int threads)
 
         combine(list, newsize, size);
 
-        sem_destroy(sem);
+        sem_destroy(&sem);
         free(threadsused);
     }
 
@@ -137,11 +137,14 @@ static void *mergesort_thread(void *params)
 
 static int getthreads(struct threadparams *p)
 {
+
+    printf("%ld \n", p->sem);
+
     int out = 0;
     sem_wait(p->sem);
         char total = *p->threads + *p->threadsused;
 
-        if(*p->threads > 0 && total >= (1 << p->level - 1))
+        if(*p->threads > 0 && total >= (1 << (p->level - 1)))
         {
             out++;
             *p->threads = *p->threads - 1;
