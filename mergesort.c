@@ -158,7 +158,7 @@ static int getthreads(struct threadparams *p)
 static void combine(int *list, int mid, int size)
 {
     int i = 0, j = mid, ptr = 0;
-    int new[size];
+    int *new = malloc(size * sizeof(int));
 
     while(i < mid && j < size)
     {
@@ -181,4 +181,6 @@ static void combine(int *list, int mid, int size)
     {
         list[i] = new[i];
     }
+
+    free(new);
 }
