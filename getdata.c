@@ -24,7 +24,6 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error allocating memory\n");
         return 1;
     }
-    *size = 0;
     char helpopt = 0, fileopt = 0, listopt = 0, threadopt = 0, threads = 0;
     char *filename;
     while((opt = getopt(argc, argv, "hf:j:l:")) != -1)
@@ -68,11 +67,11 @@ int main(int argc, char **argv)
 
     if(*size > 1)
     {
+        //printf("started sorting, size: %d, threads %d\n", *size, threads);
         mergesort(list, *size, threads);
     }
 
     printf("%d", list[0]);
-
     int i;
     for(i = 1; i < *size; i++)
     {
@@ -176,6 +175,8 @@ static int *get_list_from_file(char *filename, int *size) //return value must be
         exit(1);
     }
 
+    *size = 0;
+
     out[*size] = get_token(fd, &notdone);
 
     while(notdone)
@@ -194,6 +195,8 @@ static int *get_list_from_file(char *filename, int *size) //return value must be
     }
     
     close(fd);
+
+    *size += 1;
 
     return out;
 }
@@ -218,7 +221,10 @@ int get_token(int fd, int *notdone)
             exit(1);
         }
     }
-
-    buf[i - 1] = '\0';
+    
+    if(!*notdone)
+        buf[i] = '\0';
+    else
+        buf[i - 1] = '\0';
     return atoi(buf);
 }

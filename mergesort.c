@@ -108,28 +108,31 @@ static void *mergesort_thread(void *params)
 
         pthread_t thread;
 
-        struct threadparams pl;
-        pl.list = p->list;
-        pl.size = newsize;
-        pl.threads = p->threads;
-        pl.threadsused = p->threadsused;
-        pl.level = p->level + 1;
-        pl.sem = p->sem;
+        struct threadparams *pl = malloc(sizeof(struct threadparams));
+        pl->list = p->list;
+        pl->size = newsize;
+        pl->threads = p->threads;
+        pl->threadsused = p->threadsused;
+        pl->level = p->level + 1;
+        pl->sem = p->sem;
 
-        struct threadparams pr;
-        pr.list = p->list + newsize;
-        pr.size = isodd ? newsize + 1 : newsize;
-        pr.threads = p->threads;
-        pr.threadsused = p->threadsused;
-        pr.level = p->level + 1;
-        pr.sem = p->sem;
+        struct threadparams *pr = malloc(sizeof(struct threadparams));
+        pr->list = p->list + newsize;
+        pr->size = isodd ? newsize + 1 : newsize;
+        pr->threads = p->threads;
+        pr->threadsused = p->threadsused;
+        pr->level = p->level + 1;
+        pr->sem = p->sem;
 
-        pthread_create(&thread, NULL, mergesort_thread, &pl);
-        mergesort_thread(&pr);
+        pthread_create(&thread, NULL, mergesort_thread, pl);
+        mergesort_thread(pr);
 
         pthread_join(thread, NULL);
 
         combine(p->list, newsize, p->size);
+
+        free(pl);
+        free(pr);
     }
 
     return NULL;
@@ -137,9 +140,6 @@ static void *mergesort_thread(void *params)
 
 static int getthreads(struct threadparams *p)
 {
-
-    printf("%ld \n", p->sem);
-
     int out = 0;
     sem_wait(p->sem);
         char total = *p->threads + *p->threadsused;
@@ -150,7 +150,6 @@ static int getthreads(struct threadparams *p)
             *p->threads = *p->threads - 1;
             *p->threadsused = *p->threadsused + 1;
         }
-
     sem_post(p->sem);
 
     return out;
