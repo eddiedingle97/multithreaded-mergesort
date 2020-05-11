@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <time.h>
 #include "mergesort.h"
 
 static int *get_list(char *arg, int *size);
@@ -24,38 +25,39 @@ int main(int argc, char **argv)
         fprintf(stderr, "Error allocating memory\n");
         return 1;
     }
-    char helpopt = 0, fileopt = 0, listopt = 0, threadopt = 0, threads = 0;
+    char timeopt = 0, helpopt = 0, fileopt = 0, listopt = 0, threadopt = 0, threads = 0;
     char *filename;
-    while((opt = getopt(argc, argv, "hf:j:l:")) != -1)
+    char *listptr;
+    while((opt = getopt(argc, argv, "thf:j:l:")) != -1)
         switch(opt)
         {
             case 'f':
-                printf("file option %s\n", optarg);
                 fileopt = 1;
                 filename = optarg;
-                list = get_list_from_file(filename, size);
                 break;
 
             case 'j':
-                printf("thread option %s\n", optarg);
                 threadopt = 1;
                 threads = atoi(optarg);
                 break;
 
             case 'l':
-                printf("list option %s\n", optarg);
                 listopt = 1;
-                list = get_list(optarg, size);
+                listptr = optarg;
                 break;
             
             case 'h':
-                puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-j x \t\t\t: make process using x amount of threads\n");
                 helpopt = 1;
+                break;
+
+            case 't':
+                timeopt = 1;
                 break;
         }
 
     if(helpopt)
     {
+        puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-j x \t\t\t: make process using x amount of threads\n");
         return 0;
     }
 
@@ -65,11 +67,34 @@ int main(int argc, char **argv)
         return 0;
     }
 
-    if(*size > 1)
+    if(fileopt && listopt)
     {
-        //printf("started sorting, size: %d, threads %d\n", *size, threads);
-        mergesort(list, *size, threads);
+        fprintf(stdout, "Must pick either file or list option, not both\n");
+        return 0;
     }
+
+    if(fileopt)
+        list = get_list_from_file(filename, size);
+
+    if(listopt)
+        list = get_list(listptr, size);
+
+    clock_t start, end;
+    if(*size > 1 && timeopt)
+    {
+        start = clock();
+
+        mergesort(list, *size, threads);
+
+        end = clock();
+    }
+
+    else if(*size > 1)
+    {  
+        //printf("started sorting, size: %d, threads %d\n", *size, threads);
+        mergesort(list, *size, threads);   
+    }
+
 
     printf("%d", list[0]);
     int i;
@@ -78,6 +103,9 @@ int main(int argc, char **argv)
         printf(",%d", list[i]);
     }
     printf("\n");
+
+    if(timeopt)
+        printf("time taken for sort: %fms\n", (double)(end - start) / CLOCKS_PER_SEC * 1000);
 
     free(list);
     free(size);

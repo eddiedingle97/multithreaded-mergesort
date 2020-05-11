@@ -27,7 +27,7 @@ void mergesort(int *list, int size, int threads)
     if(size == 1)
         return;
     
-    if(threads > 1)
+    if(threads > 0)
     {
         int *threadsused = malloc(sizeof(int));
         *threadsused = 1;
