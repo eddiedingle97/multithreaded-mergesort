@@ -57,7 +57,7 @@ int main(int argc, char **argv)
 
     if(helpopt)
     {
-        puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-j x \t\t\t: make process using x amount of threads\n");
+        puts("-l x,y,z \t\t: enter list with elements x,y,z\n-f filename \t\t: read list from csv file\n-j x \t\t\t: make process using x amount of threads\n-t   \t\t\t: output the amount of time it took to perform the operation");
         return 0;
     }
 
