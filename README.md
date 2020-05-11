@@ -10,4 +10,4 @@ I am mostly satisfied with this project, it can currently sort up to 10,000,000 
 
 reading from a file is very slow, and the actual sort is a very small fraction of time
 
-There are definitely some more optimizations that can be done for the multithreaded mergesort option, but, as for now, adding more threads increases the time to sort
+There are definitely some more optimizations that can be done for the multithreaded mergesort option, but, as for now, adding threads beyond 1 increases the time to sort
